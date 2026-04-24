@@ -8,11 +8,11 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
     <script>
-        window.addEventListener('beforeunload', function (event) {
+        function gnmathBeforeUnloadHandler(event) {
             event.preventDefault();
             event.returnValue = '';
             return 'Are you sure you want to leave? Any unsaved changes will be lost.';
-        });
+        }
     </script>
     <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WX5VS54ZDW"></script>
     <script>
@@ -787,6 +787,13 @@ footer {
     font-size: 14px;
 }
 
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+    transition: none !important;
+    animation: none !important;
+}
+
 .info-button {
     background: none;
     border: none;
@@ -1514,6 +1521,10 @@ const PREVIEW_CLOAK_STORAGE_KEYS = {
     enabled: "gnmath-preview-cloak-enabled",
     sensitivity: "gnmath-preview-cloak-sensitivity"
 };
+const APP_SETTINGS_STORAGE_KEYS = {
+    warnBeforeUnload: "gnmath-warn-before-unload",
+    reducedMotion: "gnmath-reduced-motion"
+};
 const TAB_CLOAK_PRESETS = {
     canvas: {
         label: "Canvas",
@@ -1544,6 +1555,7 @@ function applySavedSettings() {
     setTheme(savedTheme);
     initializeDefaultTabCloak();
     applyStoredTabCloak();
+    applyBehaviorSettings();
     setupTabPreviewCloak();
 }
 
@@ -1593,6 +1605,36 @@ function applyStoredTabCloak() {
     cloakIcon(storedCloak.icon, { persist: false });
 }
 
+function getWarnBeforeUnloadEnabled() {
+    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload) !== "false";
+}
+
+function setWarnBeforeUnloadEnabled(isEnabled) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload, isEnabled ? "true" : "false");
+    updateBeforeUnloadProtection();
+}
+
+function updateBeforeUnloadProtection() {
+    window.removeEventListener("beforeunload", gnmathBeforeUnloadHandler);
+    if (getWarnBeforeUnloadEnabled()) {
+        window.addEventListener("beforeunload", gnmathBeforeUnloadHandler);
+    }
+}
+
+function getReducedMotionEnabled() {
+    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion) === "true";
+}
+
+function setReducedMotionEnabled(isEnabled) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion, isEnabled ? "true" : "false");
+    document.body.classList.toggle("reduced-motion", isEnabled);
+}
+
+function applyBehaviorSettings() {
+    updateBeforeUnloadProtection();
+    document.body.classList.toggle("reduced-motion", getReducedMotionEnabled());
+}
+
 function getPreviewCloakEnabled() {
     return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) !== "false";
 }
@@ -1605,15 +1647,15 @@ function setPreviewCloakEnabled(isEnabled) {
 }
 
 function getPreviewCloakSensitivity() {
-    const sensitivity = localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity) || "high";
-    if (!["normal", "high", "extreme"].includes(sensitivity)) {
-        return "high";
+    const sensitivity = localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity) || "lowMed";
+    if (!["low", "lowMed", "medium", "high"].includes(sensitivity)) {
+        return "lowMed";
     }
     return sensitivity;
 }
 
 function setPreviewCloakSensitivity(sensitivity) {
-    const safeSensitivity = ["normal", "high", "extreme"].includes(sensitivity) ? sensitivity : "high";
+    const safeSensitivity = ["low", "lowMed", "medium", "high"].includes(sensitivity) ? sensitivity : "lowMed";
     localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity, safeSensitivity);
 }
 
@@ -1642,17 +1684,23 @@ function handlePreviewCloakTrigger(reason) {
     }
 
     const sensitivity = getPreviewCloakSensitivity();
-    if (document.hidden || reason === "blur") {
+
+    if (document.hidden) {
         setTabPreviewCloak(true);
         return;
     }
 
-    if (sensitivity === "high" && reason === "mouseleave") {
+    if (reason === "blur" && ["lowMed", "medium", "high"].includes(sensitivity)) {
         setTabPreviewCloak(true);
         return;
     }
 
-    if (sensitivity === "extreme" && (reason === "mouseleave" || reason === "windowmouseout")) {
+    if (reason === "mouseleave" && ["medium", "high"].includes(sensitivity)) {
+        setTabPreviewCloak(true);
+        return;
+    }
+
+    if (reason === "windowmouseout" && sensitivity === "high") {
         setTabPreviewCloak(true);
     }
 }
@@ -1741,6 +1789,8 @@ function resetAppearanceSettings() {
     localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.initialized);
     localStorage.removeItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled);
     localStorage.removeItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion);
     location.reload();
 }
 
@@ -1776,6 +1826,8 @@ settings.addEventListener('click', () => {
     const popupBody = document.getElementById('popupBody');
     const previewCloakEnabled = getPreviewCloakEnabled();
     const previewCloakSensitivity = getPreviewCloakSensitivity();
+    const warnBeforeUnload = getWarnBeforeUnloadEnabled();
+    const reducedMotion = getReducedMotionEnabled();
 
     popupBody.innerHTML = `
     <div class="settings-section">
@@ -1789,6 +1841,11 @@ settings.addEventListener('click', () => {
             <button class="theme-button" data-theme-option="blue" onclick="setTheme('blue')">Blue</button>
             <button class="theme-button" data-theme-option="green" onclick="setTheme('green')">Green</button>
         </div>
+        <br>
+        <div class="settings-inline">
+            <label for="reduced-motion-enabled">Reduce motion effects</label>
+            <input id="reduced-motion-enabled" type="checkbox" ${reducedMotion ? "checked" : ""} onchange="setReducedMotionEnabled(this.checked)">
+        </div>
     </div>
 
     <div class="settings-section">
@@ -1800,12 +1857,21 @@ settings.addEventListener('click', () => {
         <br>
         <label for="preview-cloak-sensitivity" style="display:block; margin-bottom: 0.4rem;">Cloak sensitivity</label>
         <select id="preview-cloak-sensitivity" class="settings-select" onchange="setPreviewCloakSensitivity(this.value)">
-            <option value="normal" ${previewCloakSensitivity === "normal" ? "selected" : ""}>Normal (blur + hidden)</option>
-            <option value="high" ${previewCloakSensitivity === "high" ? "selected" : ""}>High (also on mouse leave)</option>
-            <option value="extreme" ${previewCloakSensitivity === "extreme" ? "selected" : ""}>Extreme (aggressive window-out)</option>
+            <option value="low" ${previewCloakSensitivity === "low" ? "selected" : ""}>Low (hidden tabs only)</option>
+            <option value="lowMed" ${previewCloakSensitivity === "lowMed" ? "selected" : ""}>Low-Med (default, hidden + blur)</option>
+            <option value="medium" ${previewCloakSensitivity === "medium" ? "selected" : ""}>Medium (also on mouse leave)</option>
+            <option value="high" ${previewCloakSensitivity === "high" ? "selected" : ""}>High (aggressive)</option>
         </select>
         <br>
         <button class="settings-button" onclick="tabCloak()">Open Tab Cloak</button>
+    </div>
+
+    <div class="settings-section">
+        <h4>Behavior</h4>
+        <div class="settings-inline">
+            <label for="warn-before-unload">Warn before leaving page</label>
+            <input id="warn-before-unload" type="checkbox" ${warnBeforeUnload ? "checked" : ""} onchange="setWarnBeforeUnloadEnabled(this.checked)">
+        </div>
     </div>
 
     <div class="settings-section">
