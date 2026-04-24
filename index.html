@@ -664,13 +664,15 @@ footer {
     }
 
 }
-.control-button img {
+.control-button img,
+.control-button .control-icon {
     transition: transform 0.4s ease;
     width: 24px;
     height: 24px;
 }
 
-.control-button:hover img {
+.control-button:hover img,
+.control-button:hover .control-icon {
     transform: rotate(40deg);
 }
 
@@ -756,6 +758,35 @@ footer {
     box-shadow: var(--shadow-glow);
 }
 
+.settings-section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.875rem;
+    margin-bottom: 0.75rem;
+    background: var(--surface);
+}
+
+.settings-section h4 {
+    margin: 0 0 0.5rem;
+}
+
+.settings-inline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.settings-select {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text);
+    font-size: 14px;
+}
+
 .info-button {
     background: none;
     border: none;
@@ -813,8 +844,11 @@ footer {
                     <img src="refresh-icon.png" alt="refresh">
                 </button>
 
-                <button id="settings" class="control-button" title="Settings!">
-                    <img src="setting.png" alt="settings">
+                <button id="settings" class="control-button" title="Settings!" aria-label="Open settings">
+                    <svg class="control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
                 </button>
             </div>
         </div>
@@ -1476,6 +1510,10 @@ const TAB_CLOAK_STORAGE_KEYS = {
     icon: "gnmath-tab-cloak-icon",
     initialized: "gnmath-tab-cloak-initialized"
 };
+const PREVIEW_CLOAK_STORAGE_KEYS = {
+    enabled: "gnmath-preview-cloak-enabled",
+    sensitivity: "gnmath-preview-cloak-sensitivity"
+};
 const TAB_CLOAK_PRESETS = {
     canvas: {
         label: "Canvas",
@@ -1555,6 +1593,30 @@ function applyStoredTabCloak() {
     cloakIcon(storedCloak.icon, { persist: false });
 }
 
+function getPreviewCloakEnabled() {
+    return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) !== "false";
+}
+
+function setPreviewCloakEnabled(isEnabled) {
+    localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled, isEnabled ? "true" : "false");
+    if (!isEnabled) {
+        setTabPreviewCloak(false);
+    }
+}
+
+function getPreviewCloakSensitivity() {
+    const sensitivity = localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity) || "high";
+    if (!["normal", "high", "extreme"].includes(sensitivity)) {
+        return "high";
+    }
+    return sensitivity;
+}
+
+function setPreviewCloakSensitivity(sensitivity) {
+    const safeSensitivity = ["normal", "high", "extreme"].includes(sensitivity) ? sensitivity : "high";
+    localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity, safeSensitivity);
+}
+
 function ensureTabPreviewOverlay() {
     let overlay = document.getElementById("tab-preview-cloak-overlay");
     if (overlay) {
@@ -1569,22 +1631,56 @@ function ensureTabPreviewOverlay() {
 
 function setTabPreviewCloak(enabled) {
     const overlay = ensureTabPreviewOverlay();
-    overlay.style.display = enabled ? "block" : "none";
+    const shouldShow = enabled && getPreviewCloakEnabled();
+    overlay.style.display = shouldShow ? "block" : "none";
+}
+
+function handlePreviewCloakTrigger(reason) {
+    if (!getPreviewCloakEnabled()) {
+        setTabPreviewCloak(false);
+        return;
+    }
+
+    const sensitivity = getPreviewCloakSensitivity();
+    if (document.hidden || reason === "blur") {
+        setTabPreviewCloak(true);
+        return;
+    }
+
+    if (sensitivity === "high" && reason === "mouseleave") {
+        setTabPreviewCloak(true);
+        return;
+    }
+
+    if (sensitivity === "extreme" && (reason === "mouseleave" || reason === "windowmouseout")) {
+        setTabPreviewCloak(true);
+    }
 }
 
 function setupTabPreviewCloak() {
     ensureTabPreviewOverlay();
 
     document.addEventListener("visibilitychange", () => {
-        setTabPreviewCloak(document.hidden);
+        if (document.hidden) {
+            setTabPreviewCloak(true);
+        } else {
+            setTabPreviewCloak(false);
+        }
     });
 
-    window.addEventListener("blur", () => {
-        setTabPreviewCloak(true);
-    });
+    window.addEventListener("blur", () => handlePreviewCloakTrigger("blur"));
+    window.addEventListener("focus", () => setTabPreviewCloak(false));
 
-    window.addEventListener("focus", () => {
-        setTabPreviewCloak(false);
+    document.addEventListener("mouseleave", () => handlePreviewCloakTrigger("mouseleave"));
+    window.addEventListener("mouseout", event => {
+        if (!event.relatedTarget && !event.toElement) {
+            handlePreviewCloakTrigger("windowmouseout");
+        }
+    });
+    window.addEventListener("mouseenter", () => {
+        if (!document.hidden) {
+            setTabPreviewCloak(false);
+        }
     });
 }
 
@@ -1637,6 +1733,17 @@ function resetTabCloak() {
     if (iconInput) iconInput.value = "";
 }
 
+function resetAppearanceSettings() {
+    localStorage.removeItem("gnmath-mode");
+    localStorage.removeItem("gnmath-theme");
+    localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.title);
+    localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.icon);
+    localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.initialized);
+    localStorage.removeItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled);
+    localStorage.removeItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity);
+    location.reload();
+}
+
 function tabCloak() {
     closePopup();
     document.getElementById('popupTitle').textContent = "Tab Cloak";
@@ -1667,19 +1774,46 @@ const settings = document.getElementById('settings');
 settings.addEventListener('click', () => {
     document.getElementById('popupTitle').textContent = "Settings";
     const popupBody = document.getElementById('popupBody');
+    const previewCloakEnabled = getPreviewCloakEnabled();
+    const previewCloakSensitivity = getPreviewCloakSensitivity();
+
     popupBody.innerHTML = `
-    <button class="settings-button" onclick="darkMode()">Toggle Dark Mode</button>
-    <br><br>
-    <div style="font-weight: 700; margin-bottom: 0.5rem;">Theme Color</div>
-    <div class="theme-options">
-        <button class="theme-button" data-theme-option="red" onclick="setTheme('red')">Red</button>
-        <button class="theme-button" data-theme-option="orange" onclick="setTheme('orange')">Orange</button>
-        <button class="theme-button" data-theme-option="blue" onclick="setTheme('blue')">Blue</button>
-        <button class="theme-button" data-theme-option="green" onclick="setTheme('green')">Green</button>
+    <div class="settings-section">
+        <h4>Appearance</h4>
+        <button class="settings-button" onclick="darkMode()">Toggle Dark Mode</button>
+        <br><br>
+        <div style="font-weight: 700; margin-bottom: 0.5rem;">Theme Color</div>
+        <div class="theme-options">
+            <button class="theme-button" data-theme-option="red" onclick="setTheme('red')">Red</button>
+            <button class="theme-button" data-theme-option="orange" onclick="setTheme('orange')">Orange</button>
+            <button class="theme-button" data-theme-option="blue" onclick="setTheme('blue')">Blue</button>
+            <button class="theme-button" data-theme-option="green" onclick="setTheme('green')">Green</button>
+        </div>
     </div>
-    <br>
-    <button class="settings-button" onclick="tabCloak()">Tab Cloak</button>
-    <br>
+
+    <div class="settings-section">
+        <h4>Privacy Cloak</h4>
+        <div class="settings-inline">
+            <label for="preview-cloak-enabled">Preview cloak enabled</label>
+            <input id="preview-cloak-enabled" type="checkbox" ${previewCloakEnabled ? "checked" : ""} onchange="setPreviewCloakEnabled(this.checked)">
+        </div>
+        <br>
+        <label for="preview-cloak-sensitivity" style="display:block; margin-bottom: 0.4rem;">Cloak sensitivity</label>
+        <select id="preview-cloak-sensitivity" class="settings-select" onchange="setPreviewCloakSensitivity(this.value)">
+            <option value="normal" ${previewCloakSensitivity === "normal" ? "selected" : ""}>Normal (blur + hidden)</option>
+            <option value="high" ${previewCloakSensitivity === "high" ? "selected" : ""}>High (also on mouse leave)</option>
+            <option value="extreme" ${previewCloakSensitivity === "extreme" ? "selected" : ""}>Extreme (aggressive window-out)</option>
+        </select>
+        <br>
+        <button class="settings-button" onclick="tabCloak()">Open Tab Cloak</button>
+    </div>
+
+    <div class="settings-section">
+        <h4>Quick Actions</h4>
+        <button class="settings-button" onclick="listZones()">Refresh Zones</button>
+        <br><br>
+        <button class="settings-button" onclick="resetAppearanceSettings()">Reset Appearance + Cloak Settings</button>
+    </div>
     `;
     popupBody.contentEditable = false;
     document.getElementById('popupOverlay').style.display = "flex";
