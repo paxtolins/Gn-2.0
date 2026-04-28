@@ -1513,6 +1513,7 @@ const TAB_CLOAK_STORAGE_KEYS = {
     icon: "gnmath-tab-cloak-icon",
     initialized: "gnmath-tab-cloak-initialized"
 };
+codex/identify-potential-improvements-03o42i
 const PREVIEW_CLOAK_STORAGE_KEYS = {
     enabled: "gnmath-preview-cloak-enabled",
     sensitivity: "gnmath-preview-cloak-sensitivity"
@@ -1521,6 +1522,8 @@ const APP_SETTINGS_STORAGE_KEYS = {
     warnBeforeUnload: "gnmath-warn-before-unload",
     reducedMotion: "gnmath-reduced-motion"
 };
+=======
+main
 const TAB_CLOAK_PRESETS = {
     canvas: {
         label: "Canvas",
@@ -1551,8 +1554,11 @@ function applySavedSettings() {
     setTheme(savedTheme);
     initializeDefaultTabCloak();
     applyStoredTabCloak();
+    codex/identify-potential-improvements-03o42i
     applyBehaviorSettings();
     setupTabPreviewCloak();
+=======
+ main
 }
 
 function darkMode() {
@@ -1734,6 +1740,12 @@ function cloakIcon(url, { persist = true } = {}) {
     if (!link) {
         link = document.createElement("link");
     }
+function cloakIcon(url, { persist = true } = {}) {
+    const iconUrl = (url + "").trim().length === 0 ? "favicon.png" : (url + "").trim();
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+        link = document.createElement("link");
+    }
     link.rel = "icon";
     link.href = iconUrl;
     document.head.appendChild(link);
@@ -1741,6 +1753,17 @@ function cloakIcon(url, { persist = true } = {}) {
     if (persist) {
         localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.icon, iconUrl);
     }
+}
+
+function cloakName(title, { persist = true } = {}) {
+    const nextTitle = (title + "").trim().length === 0 ? "gn-math" : (title + "").trim();
+    document.title = nextTitle;
+
+    if (persist) {
+        localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.title, nextTitle);
+    }
+}
+
 }
 
 function cloakName(title, { persist = true } = {}) {
