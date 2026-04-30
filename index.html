@@ -942,6 +942,38 @@ function toTitleCase(str) {
     text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
   );
 }
+
+
+async function fetchJsonWithTimeout(url, timeoutMs = 8000) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) {
+            throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+        }
+        return await response.json();
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
+async function loadZonesFromFallbacks(primaryUrl) {
+    const candidates = [primaryUrl, ...zonesurls].filter((url, index, arr) => url && arr.indexOf(url) === index);
+    let lastError;
+
+    for (const url of candidates) {
+        try {
+            const data = await fetchJsonWithTimeout(url + "?t=" + Date.now());
+            zonesURL = url;
+            return data;
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    throw lastError || new Error("Unable to load zones from any endpoint.");
+}
 async function listZones() {
     try {
       let sharesponse;
@@ -969,8 +1001,7 @@ async function listZones() {
             } catch(error) {}
           }
         }
-        const response = await fetch(zonesURL+"?t="+Date.now());
-        const json = await response.json();
+        const json = await loadZonesFromFallbacks(zonesURL);
         zones = json;
         zones[0].featured = true; // always gonna be the discord
         await Promise.all([fetchPopularity("year"), fetchPopularity("month"), fetchPopularity("week"), fetchPopularity("day")]);
@@ -1715,6 +1746,72 @@ function applyBehaviorSettings() {
 
 function getPreviewCloakEnabled() {
     return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) === "true";
+}
+
+function setPreviewCloakEnabled(isEnabled) {
+    localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled, isEnabled ? "true" : "false");
+    if (!isEnabled) {
+        setTabPreviewCloak(false);
+    }
+}
+
+function getPreviewCloakSensitivity() {
+    const sensitivity = localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity) || "lowMed";
+    if (!["low", "lowMed", "medium", "high"].includes(sensitivity)) {
+        return "lowMed";
+    }
+    }
+
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.title, TAB_CLOAK_PRESETS.canvas.title);
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.icon, TAB_CLOAK_PRESETS.canvas.icon);
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.initialized, "true");
+}
+
+function getStoredTabCloak() {
+    return {
+        title: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.title) || "gn-math",
+        icon: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.icon) || "favicon.png"
+    };
+}
+
+function applyStoredTabCloak() {
+    const storedCloak = getStoredTabCloak();
+    cloakName(storedCloak.title, { persist: false });
+    cloakIcon(storedCloak.icon, { persist: false });
+}
+
+function getWarnBeforeUnloadEnabled() {
+    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload) !== "false";
+}
+
+function setWarnBeforeUnloadEnabled(isEnabled) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload, isEnabled ? "true" : "false");
+    updateBeforeUnloadProtection();
+}
+
+function updateBeforeUnloadProtection() {
+    window.removeEventListener("beforeunload", gnmathBeforeUnloadHandler);
+    if (getWarnBeforeUnloadEnabled()) {
+        window.addEventListener("beforeunload", gnmathBeforeUnloadHandler);
+    }
+}
+
+function getReducedMotionEnabled() {
+    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion) === "true";
+}
+
+function setReducedMotionEnabled(isEnabled) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion, isEnabled ? "true" : "false");
+    document.body.classList.toggle("reduced-motion", isEnabled);
+}
+
+function applyBehaviorSettings() {
+    updateBeforeUnloadProtection();
+    document.body.classList.toggle("reduced-motion", getReducedMotionEnabled());
+}
+
+function getPreviewCloakEnabled() {
+    return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) === "true";
     return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) !== "false";
 }
 
@@ -1873,6 +1970,7 @@ function setupTabPreviewCloak() {
     window.addEventListener("blur", () => handlePreviewCloakTrigger("blur"));
     window.addEventListener("focus", () => setTabPreviewCloak(false));
 
+    // Intentionally avoid hover/mouse-leave based cloaking to prevent tab-hover preview disruptions.
     document.addEventListener("mouseleave", () => handlePreviewCloakTrigger("mouseleave"));
     window.addEventListener("mouseout", event => {
         if (!event.relatedTarget && !event.toElement) {
