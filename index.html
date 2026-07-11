@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYSTEM REDIRECT // ARCHIVE_</title>
+    <title>SYSTEM_REDIRECT</title>
     <style>
         :root {
             --bg-color: #050000;
-            --hacker-red: #ff0033;
-            --dim-red: #550011;
-            --text-color: #ffcccc;
+            --accent-color: #ff003c;
+            --accent-glow: rgba(255, 0, 60, 0.5);
+            --text-color: #ffffff;
+            --muted-color: #a39999;
         }
 
         * {
@@ -30,82 +31,53 @@
             position: relative;
         }
 
-        /* CRT Scanline / Glitch effect overlay */
-        body::before {
-            content: " ";
-            display: block;
+        /* Matrix Code Rain Canvas Background */
+        canvas {
             position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 10;
-            background-size: 100% 4px, 6px 100%;
-            pointer-events: none;
-        }
-
-        /* Ambient Red Glow in background */
-        body::after {
-            content: "";
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: var(--hacker-red);
-            filter: blur(150px);
-            opacity: 0.15;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 1;
+            opacity: 0.15;
         }
 
-        .terminal-box {
-            background: rgba(10, 0, 0, 0.85);
-            border: 2px solid var(--hacker-red);
-            box-shadow: 0 0 20px var(--dim-red);
-            padding: 3rem 2rem;
-            width: 90%;
-            max-width: 550px;
+        .container {
             text-align: center;
-            z-index: 5;
-            position: relative;
-        }
-
-        /* Top terminal bar decoration */
-        .terminal-box::before {
-            content: "[ STATUS: MIGRATING_DATA ]";
-            position: absolute;
-            top: -12px;
-            left: 20px;
-            background: var(--bg-color);
-            padding: 0 10px;
-            font-size: 0.85rem;
-            color: var(--hacker-red);
-            font-weight: bold;
-            letter-spacing: 2px;
+            z-index: 2;
+            padding: 2.5rem;
+            max-width: 550px;
+            background: rgba(5, 0, 0, 0.85);
+            border: 1px solid rgba(255, 0, 60, 0.15);
+            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
         }
 
         h1 {
-            font-size: 2rem;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            margin-bottom: 1.5rem;
-            color: var(--hacker-red);
-            text-shadow: 0 0 10px var(--hacker-red);
-            animation: glitch 1s linear infinite;
+            font-size: 2.2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+            text-shadow: 0 0 10px var(--accent-glow);
         }
 
-        p {
-            font-size: 0.95rem;
+        .terminal-text {
+            color: var(--muted-color);
+            font-size: 1rem;
             line-height: 1.6;
             margin-bottom: 2.5rem;
-            color: #b39999;
         }
 
-        .blink {
-            animation: blinker 1s linear infinite;
+        .terminal-text span {
+            color: var(--accent-color);
         }
 
-        /* Hacker Countdown Ring */
+        /* Animated Countdown Ring */
         .countdown-container {
             position: relative;
-            width: 130px;
-            height: 130px;
+            width: 120px;
+            height: 120px;
             margin: 0 auto 2.5rem auto;
         }
 
@@ -118,115 +90,138 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             font-weight: bold;
-            color: var(--hacker-red);
-            text-shadow: 0 0 15px var(--hacker-red);
+            color: var(--accent-color);
+            text-shadow: 0 0 15px var(--accent-glow);
         }
 
         svg {
             transform: rotate(-90deg);
-            width: 130px;
-            height: 130px;
+            width: 120px;
+            height: 120px;
         }
 
         circle {
-            stroke-width: 6px;
+            stroke-width: 3px;
             fill: transparent;
         }
 
         .circle-bg {
-            stroke: var(--dim-red);
+            stroke: rgba(255, 0, 60, 0.05);
         }
 
         .circle-progress {
-            stroke: var(--hacker-red);
-            stroke-dasharray: 370.7; /* 2 * pi * r (r=59) */
+            stroke: var(--accent-color);
+            stroke-dasharray: 339.29; 
             stroke-dashoffset: 0;
             animation: countdown 5s linear forwards;
-            filter: drop-shadow(0 0 8px var(--hacker-red));
+            filter: drop-shadow(0 0 8px var(--accent-color));
         }
 
         @keyframes countdown {
             from { stroke-dashoffset: 0; }
-            to { stroke-dashoffset: 370.7; }
+            to { stroke-dashoffset: 339.29; }
         }
 
-        @keyframes blinker {
-            50% { opacity: 0; }
-        }
-
-        /* Brutalist Terminal Button */
+        /* Cyberpunk Terminal Button */
         .redirect-btn {
             display: inline-block;
             text-decoration: none;
-            color: var(--bg-color);
-            background: var(--hacker-red);
-            border: 1px solid var(--hacker-red);
-            padding: 0.8rem 1.8rem;
+            color: var(--accent-color);
+            background: transparent;
+            border: 1px solid var(--accent-color);
+            padding: 0.8rem 2rem;
             font-weight: bold;
             font-size: 0.9rem;
-            text-transform: uppercase;
             letter-spacing: 2px;
             transition: all 0.2s ease;
-            box-shadow: 0 0 10px var(--dim-red);
+            text-transform: uppercase;
         }
 
         .redirect-btn:hover {
-            background: transparent;
-            color: var(--hacker-red);
-            box-shadow: 0 0 20px var(--hacker-red);
+            background: var(--accent-color);
+            color: var(--bg-color);
+            box-shadow: 0 0 25px var(--accent-glow);
             cursor: pointer;
-        }
-
-        /* Subtle text glitch simulation */
-        @keyframes glitch {
-            0% { text-shadow: 2px 1px 0 rgba(255,0,0,0.5), -1px -2px 0 rgba(0,0,0,0.5); }
-            95% { text-shadow: 2px 1px 0 rgba(255,0,0,0.5), -1px -2px 0 rgba(0,0,0,0.5); }
-            96% { text-shadow: -3px 2px 0 rgba(255,0,0,0.8), 3px -2px 0 rgba(255,0,0,0.8); }
-            98% { text-shadow: 4px -1px 0 rgba(255,0,0,0.8), -4px 3px 0 rgba(255,0,0,0.8); }
-            100% { text-shadow: 2px 1px 0 rgba(255,0,0,0.5), -1px -2px 0 rgba(0,0,0,0.5); }
         }
     </style>
 </head>
 <body>
 
-    <div class="terminal-box">
-        <h1>ACCESS_GRANTED</h1>
-        <p>> Host domain outdated.<br>> Rerouting traffic to secure math node...<span class="blink">_</span></p>
+    <!-- Cyber Background Rain -->
+    <canvas id="matrix"></canvas>
+
+    <div class="container">
+        <h1>[ SYSTEM_REROUTE ]</h1>
+        <p class="terminal-text">
+            Traffic migration in progress...<br>
+            Establishing secure link to: <span>schswork.github.io/math/</span>
+        </p>
 
         <div class="countdown-container">
             <div class="countdown-number" id="countdown-text">5</div>
             <svg>
-                <circle class="circle-bg" cx="65" cy="65" r="59"></circle>
-                <circle class="circle-progress" cx="65" cy="65" r="59"></circle>
+                <circle class="circle-bg" cx="60" cy="60" r="54"></circle>
+                <circle class="circle-progress" cx="60" cy="60" r="54"></circle>
             </svg>
         </div>
 
-        <a href="https://schswork.github.io/math/" class="redirect-btn">FORCE OVERRIDE &gt;&gt;</a>
+        <a href="https://schswork.github.io/math/" class="redirect-btn">FORCE_BYPASS &rarr;</a>
     </div>
 
     <script>
+        // Redirect Logic
         const targetURL = "https://schswork.github.io/math/";
         let timeLeft = 5;
         const countdownText = document.getElementById('countdown-text');
 
         const timer = setInterval(() => {
             timeLeft--;
-            if (timeLeft >= 0) {
-                countdownText.textContent = timeLeft;
-            }
-            
+            if (timeLeft >= 0) countdownText.textContent = timeLeft;
             if (timeLeft <= 0) {
                 clearInterval(timer);
                 window.location.href = targetURL;
             }
         }, 1000);
 
-        // Fallback backup timer
-        setTimeout(() => {
-            window.location.href = targetURL;
-        }, 5500);
+        setTimeout(() => { window.location.href = targetURL; }, 5500);
+
+        // Red Matrix Code Rain Script
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Mix of math operators and binary characters
+        const charset = "01010110110+-%=≠√πXµ∑Ø".split("");
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(5, 0, 0, 0.05)"; // creates trailing fade effect
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "#ff003c"; // Red hacker rain
+            ctx.font = fontSize + "px monospace";
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = charset[Math.floor(Math.random() * charset.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 33); // roughly 30 FPS Matrix stream
     </script>
 
 </body>
