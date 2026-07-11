@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moving to a New Formula</title>
+    <title>SYSTEM REDIRECT // ARCHIVE_</title>
     <style>
         :root {
-            --bg-color: #0a0a0c;
-            --accent-color: #00ffcc;
-            --text-color: #ffffff;
-            --muted-color: #888899;
+            --bg-color: #050000;
+            --hacker-red: #ff0033;
+            --dim-red: #550011;
+            --text-color: #ffcccc;
         }
 
         * {
@@ -21,7 +21,7 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Courier New', Courier, monospace;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -30,51 +30,82 @@
             position: relative;
         }
 
-        /* Subtle Cyber/Math Grid Background Effect */
+        /* CRT Scanline / Glitch effect overlay */
         body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        /* Ambient Red Glow in background */
+        body::after {
             content: "";
             position: absolute;
-            width: 200%;
-            height: 200%;
-            top: -50%;
-            left: -50%;
-            background-image: 
-                linear-gradient(rgba(0, 255, 204, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 204, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            transform: rotate(15deg);
+            width: 300px;
+            height: 300px;
+            background: var(--hacker-red);
+            filter: blur(150px);
+            opacity: 0.15;
             z-index: 1;
         }
 
-        .container {
+        .terminal-box {
+            background: rgba(10, 0, 0, 0.85);
+            border: 2px solid var(--hacker-red);
+            box-shadow: 0 0 20px var(--dim-red);
+            padding: 3rem 2rem;
+            width: 90%;
+            max-width: 550px;
             text-align: center;
-            z-index: 2;
-            padding: 2rem;
-            max-width: 500px;
+            z-index: 5;
+            position: relative;
+        }
+
+        /* Top terminal bar decoration */
+        .terminal-box::before {
+            content: "[ STATUS: MIGRATING_DATA ]";
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--bg-color);
+            padding: 0 10px;
+            font-size: 0.85rem;
+            color: var(--hacker-red);
+            font-weight: bold;
+            letter-spacing: 2px;
         }
 
         h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            letter-spacing: -0.05em;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, #ffffff, var(--accent-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 1.5rem;
+            color: var(--hacker-red);
+            text-shadow: 0 0 10px var(--hacker-red);
+            animation: glitch 1s linear infinite;
         }
 
         p {
-            color: var(--muted-color);
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             line-height: 1.6;
             margin-bottom: 2.5rem;
+            color: #b39999;
         }
 
-        /* Animated Countdown Ring */
+        .blink {
+            animation: blinker 1s linear infinite;
+        }
+
+        /* Hacker Countdown Ring */
         .countdown-container {
             position: relative;
-            width: 120px;
-            height: 120px;
+            width: 130px;
+            height: 130px;
             margin: 0 auto 2.5rem auto;
         }
 
@@ -87,83 +118,92 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: bold;
-            font-family: monospace;
-            color: var(--accent-color);
-            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+            color: var(--hacker-red);
+            text-shadow: 0 0 15px var(--hacker-red);
         }
 
         svg {
             transform: rotate(-90deg);
-            width: 120px;
-            height: 120px;
+            width: 130px;
+            height: 130px;
         }
 
         circle {
-            stroke-width: 4px;
+            stroke-width: 6px;
             fill: transparent;
         }
 
         .circle-bg {
-            stroke: rgba(255, 255, 255, 0.05);
+            stroke: var(--dim-red);
         }
 
         .circle-progress {
-            stroke: var(--accent-color);
-            stroke-dasharray: 339.29; /* 2 * pi * r (r=54) */
+            stroke: var(--hacker-red);
+            stroke-dasharray: 370.7; /* 2 * pi * r (r=59) */
             stroke-dashoffset: 0;
             animation: countdown 5s linear forwards;
-            filter: drop-shadow(0 0 6px var(--accent-color));
+            filter: drop-shadow(0 0 8px var(--hacker-red));
         }
 
         @keyframes countdown {
-            from {
-                stroke-dashoffset: 0;
-            }
-            to {
-                stroke-dashoffset: 339.29;
-            }
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: 370.7; }
         }
 
-        /* Glassmorphism Manual Link Button */
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+
+        /* Brutalist Terminal Button */
         .redirect-btn {
             display: inline-block;
             text-decoration: none;
-            color: var(--accent-color);
-            background: rgba(0, 255, 204, 0.05);
-            border: 1px solid rgba(0, 255, 204, 0.2);
+            color: var(--bg-color);
+            background: var(--hacker-red);
+            border: 1px solid var(--hacker-red);
             padding: 0.8rem 1.8rem;
-            border-radius: 50px;
-            font-weight: 500;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px var(--dim-red);
         }
 
         .redirect-btn:hover {
-            background: var(--accent-color);
-            color: var(--bg-color);
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
-            transform: translateY(-2px);
+            background: transparent;
+            color: var(--hacker-red);
+            box-shadow: 0 0 20px var(--hacker-red);
+            cursor: pointer;
+        }
+
+        /* Subtle text glitch simulation */
+        @keyframes glitch {
+            0% { text-shadow: 2px 1px 0 rgba(255,0,0,0.5), -1px -2px 0 rgba(0,0,0,0.5); }
+            95% { text-shadow: 2px 1px 0 rgba(255,0,0,0.5), -1px -2px 0 rgba(0,0,0,0.5); }
+            96% { text-shadow: -3px 2px 0 rgba(255,0,0,0.8), 3px -2px 0 rgba(255,0,0,0.8); }
+            98% { text-shadow: 4px -1px 0 rgba(255,0,0,0.8), -4px 3px 0 rgba(255,0,0,0.8); }
+            100% { text-shadow: 2px 1px 0 rgba(255,0,0,0.5), -1px -2px 0 rgba(0,0,0,0.5); }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>We're Upgrading</h1>
-        <p>This site has evolved. We are redirecting you to our new math hub in just a moment.</p>
+    <div class="terminal-box">
+        <h1>ACCESS_GRANTED</h1>
+        <p>> Host domain outdated.<br>> Rerouting traffic to secure math node...<span class="blink">_</span></p>
 
         <div class="countdown-container">
             <div class="countdown-number" id="countdown-text">5</div>
             <svg>
-                <circle class="circle-bg" cx="60" cy="60" r="54"></circle>
-                <circle class="circle-progress" cx="60" cy="60" r="54"></circle>
+                <circle class="circle-bg" cx="65" cy="65" r="59"></circle>
+                <circle class="circle-progress" cx="65" cy="65" r="59"></circle>
             </svg>
         </div>
 
-        <a href="https://schswork.github.io/math/" class="redirect-btn" id="redirect-link">Take me there now &rarr;</a>
+        <a href="https://schswork.github.io/math/" class="redirect-btn">FORCE OVERRIDE &gt;&gt;</a>
     </div>
 
     <script>
@@ -183,7 +223,7 @@
             }
         }, 1000);
 
-        // Fallback safety redirect if the interval experiences lag
+        // Fallback backup timer
         setTimeout(() => {
             window.location.href = targetURL;
         }, 5500);
